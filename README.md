@@ -11,13 +11,15 @@ and two group (Male of Female) health bias.
 
 Review:
 1) Summary comparison of 2 models (glm() function). As response either `category` or `Gender`
+
 2) PCA prcomp() function 
 centered and scaled
 `principal component score vectors have length n=50 and 
 the principal component loading vectors have length p=16`
+
 3) biplot displays 2 components or "loading vectors" listed at table with colnames PC1, or PC2, etc.
 Summary per component: Standard deviation, Proportion of Variance, or Cumulative Proportion
 multiplot line or bar graph of vectors
 
-
+4) model evaluation: training and test set selection # 10-40 
  
