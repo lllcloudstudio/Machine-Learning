@@ -4,9 +4,9 @@ A review or evaluation of 2017 health data from Dr. Vijay Kolachalama. Data's ei
 
 50 patient blood sample 
 13 diagnostic variables, as numerics and without annotations 
-Age, Gender, or Race variables are numerical 
+Age, Gender, or Race variables are numerical
 
-Variables like ph or hb, I consider an extrapolation to modelling, as diagnostics (health status)
+Variables like ph or hb, I consider an extrapolation to modelling as diagnostics (health status)
 and two group (Male of Female) health bias.
 
 Review:
@@ -21,7 +21,9 @@ the principal component loading vectors have length p=16`
 Summary per component: Standard deviation, Proportion of Variance, or Cumulative Proportion
 multiplot line or bar graph of vectors
 
-4) model evaluation: training and test set selection # 10-40 ; 15-35
+4) model evaluation: training and test set selection consideration (10-40 ; 15-35)
+5) or
+6) k-fold cross validation cv.glm() compared to glm()
 
 
 #Small Datasets: If you have very few instances (e.g., < 300), 20% may be too small to reliably test on. In this scenario, k-fold cross-validation is preferred.
