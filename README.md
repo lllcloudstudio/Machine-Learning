@@ -6,8 +6,10 @@ A review or evaluation of 2017 health data from Dr. Vijay Kolachalama. Data's ei
 13 diagnostic variables, as numerics and without annotations 
 Age, Gender, or Race variables are numerical
 
-Variables like ph or hb, I consider an extrapolation to modelling as diagnostics (health status)
-and two group (Male of Female) health bias.
+Variables like ph or hb diagnostics/health status, I consider an extrapolation to modelling. 
+
+The two group (Male of Female) health bias is delved with k-means.
+The 50 patient sample data is considered small sample size < 300*. 
 
 Review:
 1) Summary comparison of 2 models (glm() function). As response either `category` or `Gender`
@@ -21,11 +23,10 @@ the principal component loading vectors have length p=16`
 Summary per component: Standard deviation, Proportion of Variance, or Cumulative Proportion
 multiplot line or bar graph of vectors
 
-4) model evaluation: training and test set selection consideration (10-40 ; 15-35)
-5) or
-6) k-fold cross validation cv.glm() compared to glm()
+4) model evaluation: training and test set selection (10-40 ; 15-35)
+   LOOCV or k-fold cross validation cv.glm() compared to glm()
+
 
 
 #Small Datasets: If you have very few instances (e.g., < 300), 20% may be too small to reliably test on. In this scenario, k-fold cross-validation is preferred.
-
 #Use a sample size calculator and argue that you need 74.24, 25.76 split due to wanting a 90%/95% confidence etc.
