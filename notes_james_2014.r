@@ -80,7 +80,7 @@ sqrt()
 sd()
 seq()
 rnorm() #mean 0 sd 1
-pairs() #
+pairs() # 2 variable plots of data
 ##### Stock market data
 
 > dim(Smarket)
