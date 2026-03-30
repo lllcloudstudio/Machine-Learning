@@ -6,10 +6,10 @@ A review or evaluation of 2017 health data from Dr. Vijay Kolachalama. Data's ei
 13 diagnostic variables, as numerics and without annotations 
 Age, Gender, or Race variables are numerical
 
-Variables like ph, LDL, HDL, or hb diagnostics/health status, I consider an extrapolation to modelling. 
+Variables like ph, LDL, HDL, or hb diagnostics/health status, I consider an extrapolation to modelling (towards selection) .I consider multiple linear regression.
 
-The two group (Male of Female) health bias is delved with k-means or hc
-The 50 patient sample data is considered a small sample size < 300*. 
+The two group (Male of Female) health bias is delved with k-means or hc...
+The sample data is considered a small sample size < 300*. 
 
 Review:
 1) Summary comparison of 2 models (glm() function). As response either `category` or `Gender`
