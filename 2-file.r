@@ -80,7 +80,8 @@ lm.fit=lm(ph~Hb,data=table)
 coef(lm.fit) #just a check since 1 variable, use coef, same model
 ----------
 library(boot)
-
+table=read.csv('/Users/guest/Desktop/Github/ML/data/kolachalama_data.csv',head=TRUE)
+attach(table)
 
 
 glm.fit=glm(ph~Hb,data=table) #  see line 17
@@ -238,18 +239,19 @@ hc.single=hclust(dist(table[,c(7,14)]),method="single")
 library(boot)
 
 # Recursive function to drop variables and assess via CV
-recursive_cv_assessment <- function(data, response, predictors) {
+recursive_cv_assessment <- function(data, response, predictors,k) {  # or no k
   # 1. Define model formula
   formula_str <- paste(response, "~", paste(predictors, collapse = " + "))
   model_form <- as.formula(formula_str)
   
   # 2. Fit model and perform 10-fold CV
   model <- glm(model_form, data = data)
-  cv_res <- cv.glm(data, model, K = 10)
+  cv_res <- cv.glm(data, model, K = k) # 10
   cv_error <- cv_res$delta[1]
-  
-  cat("Formula:", formula_str, "| CV Error:", round(cv_error, 4), "\n", file="/Users/Guest/Desktop/Github/ML/summary/2/out.file",append=TRUE)
-  
+
+
+  cat( formula_str, ",", round(cv_error, 4),",","K=",cv_res$K, "\n", file="/Users/Guest/Desktop/Github/ML/summary/2/out.file",append=TRUE)
+  #cat("Formula:", formula_str, "| CV Error:", round(cv_error, 4), "\n", file="/Users/Guest/Desktop/Github/ML/summary/2/out.file",append=TRUE)
 
 
   # 3. Base case: if only one predictor left, stop
@@ -264,7 +266,7 @@ recursive_cv_assessment <- function(data, response, predictors) {
     # otherwise, this becomes combinatorial.
   }
   # Simple recursion example: Drop the last predictor in the list
-  recursive_cv_assessment(data, response, predictors[-length(predictors)])
+  recursive_cv_assessment(data, response, predictors[-length(predictors)],k)
 }
 
 # --- Example Usage ---
