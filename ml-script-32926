@@ -1,0 +1,17 @@
+table=read.table('/Users/guest/Desktop/Github/ML/Data/Houck_1990.csv',sep=',',header=TRUE)
+attach(table)
+
+
+lm.fit=lm(Humerus~Femur)
+
+summary(lm.fit) #
+names(summary(lm.fit)) # adj.r.squared
+names(lm.fit) 
+
+plot(Femur,Humerus)
+abline(lm.fit,lwd=3,col="red")
+
+
+#r2_value=summary(lm.fit)$adj.r.squared
+#text(x = 4, y = 10, labels = paste("R-squared =", r2_value), adj = 0)
+#points(r2_value, col = "yellow", pch = 16, cex = 1.5)
