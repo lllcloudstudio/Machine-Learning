@@ -84,7 +84,7 @@ rnorm() #mean 0 sd 1
 pairs() # 2 variable plots of data
 summary() #quartiles incl min or max of each variable
 cat()
-
+combn() #package:utils
 ##### Stock market data
 
 > dim(Smarket)
