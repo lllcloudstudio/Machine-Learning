@@ -31,24 +31,36 @@ recursive_cv_assessment <- function(data, response, predictors) {
 
 # --- Example Usage ---
 # Use mtcars dataset, predicting mpg
-data(mtcars)
+#data(mtcars)
 # Initial variables
-vars <- c("wt", "hp", "disp")
+#vars <- c("wt", "hp", "disp")
 
 # Run recursive function
-recursive_cv_assessment(mtcars, "mpg", vars)
+#recursive_cv_assessment(mtcars, "mpg", vars)
 ###########################
 
-table=read.csv('/Users/guest/Desktop/Github/ML/data/kolachalama_data.csv',head=TRUE)
-attach(table)
+#table=read.csv('/Users/guest/Desktop/Github/ML/data/kolachalama_data.csv',head=TRUE)
+#attach(table)
 
-vars=c("ph","SBP","DBP","Hb","WBC","Platelet","BUN","Creatinine","HCO3","HbA1c","LDL","HDL","TG","Tsat","Ferritin")
+#vars=c("ph","SBP","DBP","Hb","WBC","Platelet","BUN","Creatinine","HCO3","HbA1c","LDL","HDL","TG","Tsat","Ferritin")
 
+# No 2 loops
 for (i in 1:length(vars)){
 recursive_cv_assessment(table,vars[i],vars[-i])
 
 }
 
+#list of combinations
+# Example list/vector
+my_list <- c("A", "B", "C", "D")
+
+# Generate combinations of 2
+pairs <- combn(my_list, 2)
+
+# Display result
+print(pairs)
+# To see as a list of pairs:
+pair_list <- combn(my_list, 2, simplify = FALSE)
 
 
 
