@@ -63,21 +63,22 @@ table_kval_assessment <- function(data,kval,start) {
   kmodel.withinss=kmodel$withinss
   kmodel.tot.withinss=kmodel$tot.withinss
 
-  cat(kval,",",start,",",kmodel.withinss,",",kmodel.tot.withinss,"\n",  file="/Users/Guest/Desktop/Github/ML/summary/2/out_1.file",append=TRUE)
+  cat(kval,",",start,",",length(colnames(table)),",",kmodel.withinss,",",kmodel.tot.withinss,"\n",  file="/Users/Guest/Desktop/Github/ML/summary/2/out_1.file",append=TRUE)
     } #formula_str,",",
 
-start=c(20,50)
+start=c(1,20,50)
 kval=c(2,3,4,5,6)
+vars=c("ph","SBP","DBP","Hb","WBC","Platelet","BUN","Creatinine","HCO3","HbA1c","LDL","HDL","TG","Tsat","Ferritin")
+table=table[,vars]
 
 for (i in 1:length(kval)){
 table_kval_assessment(table,kval[i],20)
 }
-
 for (i in 1:length(kval)){
 table_kval_assessment(table,kval[i],50)
 }
-
 for (i in 1:length(kval)){
 table_kval_assessment(table,kval[i],1)
 }
 
+####################################################################
