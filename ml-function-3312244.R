@@ -52,23 +52,18 @@ for (i in 1:length(vars)){
 recursive_cv_assessment(table,vars[i],vars[-i])
 
 }
-
-
-
 ########################################################################################################
 table=read.csv('/Users/guest/Desktop/Github/ML/data/kolachalama_data.csv',head=TRUE)
 attach(table)
 
 table_kval_assessment <- function(data,kval,start) {
-  
-  formula_str <- paste(length(colnames(data)),",K=",kval,",nstart=",start)
-  model_form <- as.formula(formula_str)
-  
+  #formula_str <- paste(length(colnames(data)),",K=",kval,",nstart=",start)
+  #model_form <- as.formula(formula_str)
   kmodel=kmeans(data,kval,start)
   kmodel.withinss=kmodel$withinss
   kmodel.tot.withinss=kmodel$tot.withinss
 
-  cat(kval,",",start,",",kmodel.withinss,",",kmodel.tot.withinss,  file="/Users/Guest/Desktop/Github/ML/summary/2/out_1.file",append=TRUE)
+  cat(kval,",",start,",",kmodel.withinss,",",kmodel.tot.withinss,"\n",  file="/Users/Guest/Desktop/Github/ML/summary/2/out_1.file",append=TRUE)
     } #formula_str,",",
 
 start=c(20,50)
@@ -82,5 +77,7 @@ for (i in 1:length(kval)){
 table_kval_assessment(table,kval[i],50)
 }
 
-
+for (i in 1:length(kval)){
+table_kval_assessment(table,kval[i],1)
+}
 
