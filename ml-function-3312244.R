@@ -89,7 +89,7 @@ vars=c("ph","SBP","DBP","Hb","WBC","Platelet","BUN","Creatinine","HCO3","HbA1c",
 
 
 
-recursive_kmeans_assessment
+recursive_kmeans_assessment <-
 function(data, kval,start, predictors) {
   table=data[,predictors]
 
@@ -153,7 +153,7 @@ n=length(items)
 all_combos=lapply(2:n, function(m) combn(items, m, simplify = FALSE))
 table.subset.unlist <- unlist(all_combos, recursive = FALSE)
 
-kmeans.6=lapply(table.subset.unlist,function(k) kmeans(table[,k],6,20))   
+kmeans.6=lapply(table.subset.unlist,function(k) recursive_kmeans_assessment(table,6,20,k))   
                 
 table.subset=list(c("ph","SBP","DBP"),c("ph","SBP"),c("ph","DBP"))
 #table.subset.unlist <- unlist(table.subset, recursive = FALSE)
