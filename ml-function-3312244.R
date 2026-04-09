@@ -89,7 +89,26 @@ vars=c("ph","SBP","DBP","Hb","WBC","Platelet","BUN","Creatinine","HCO3","HbA1c",
 
 
 
-3
+recursive_kmeans_assessment
+function(data, kval,start, predictors) {
+  table=data[,predictors]
+
+  colnames.params <- paste("K=",kval,",nstart=",start,",",paste(colnames(table),collapse = " + "))
+  
+  kmodel=kmeans(table,kval,start)
+  kmodel.withinss=kmodel$withinss
+  kmodel.tot.withinss=kmodel$tot.withinss
+
+  cat(colnames.params,",",kval,",",start,",",length(colnames(table)),",",kmodel.withinss,",",kmodel.tot.withinss,"\n",  file="/Users/Guest/Desktop/Github/ML/summary/2/out_1.file",append=TRUE)
+
+  # 3. Base case: if only one predictor left, stop
+  if (length(predictors) == 1) {
+    return(NULL)
+  }
+  
+  recursive_kmeans_assessment(table, kval,start, predictors[-length(predictors)])
+}
+
 #####
 recursive_kmeans_assessment(table,2,1,vars)
 recursive_kmeans_assessment(table,3,1,vars)
