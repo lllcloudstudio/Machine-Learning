@@ -147,7 +147,13 @@ all_combos <- unlist(all_combos, recursive = FALSE)
 sapply(all_combos,paste,collapse=",")
 
 
+items=colnames(table)
+n=length(items)
+all_combos=lapply(2:n, function(m) combn(items, m, simplify = FALSE))
 
+table.subset.unlist <- unlist(all_combos, recursive = FALSE)
+kmeans.6=lapply(table.subset.unlist,function(k) kmeans(table[,k],6,20))   
+                
 table.subset=list(c("ph","SBP","DBP"),c("ph","SBP"),c("ph","DBP"))
 #table.subset.unlist <- unlist(table.subset, recursive = FALSE)
-kmeans.6=lapply(table.subset,function(k) kmeans(table[,k],6,20))
+
