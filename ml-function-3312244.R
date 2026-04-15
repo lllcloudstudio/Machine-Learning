@@ -153,11 +153,16 @@ table=table[,4:20] # not necessary
 items=colnames(table)
 n=length(items)
 all_combos=lapply(2:n, function(m) combn(items, m, simplify = FALSE))
-table.subset.unlist <- unlist(all_combos, recursive = FALSE)
+lengths(all_combos)
+#table.subset.unlist <- unlist(all_combos, recursive = FALSE)
+lengths(table.subset.unlist)
+kmeans.6=lapply(table.subset.unlist,function(k) kmeans(table[,k],6,20))
 
-kmeans.6=lapply(table.subset.unlist,function(k) recursive_kmeans_assessment(table,6,20,k))   
+#kmeans.6=lapply(all_combos,function(k) recursive_kmeans_assessment(table,6,20,k))   
                 
 table.subset=list(c("ph","SBP","DBP"),c("ph","SBP"),c("ph","DBP"))
+kmeans.6=lapply(table.subset,function(k) kmeans(table[,k],6,20))   
+
 #table.subset.unlist <- unlist(table.subset, recursive = FALSE)
 
 # Install purrr if not already installed
