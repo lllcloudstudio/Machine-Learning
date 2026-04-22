@@ -154,52 +154,11 @@ items=colnames(table)
 n=length(items)
 all_combos=lapply(2:n, function(m) combn(items, m, simplify = FALSE))
 lengths(all_combos)
-#table.subset.unlist <- unlist(all_combos, recursive = FALSE)
+table.subset.unlist <- unlist(all_combos, recursive = FALSE)
 lengths(table.subset.unlist)
+                  
 kmeans.6=lapply(table.subset.unlist,function(k) kmeans(table[,k],6,20))
 
-#kmeans.6=lapply(all_combos,function(k) recursive_kmeans_assessment(table,6,20,k)) 
-
-                
-table.subset=list(c("ph","SBP","DBP"),c("ph","SBP"),c("ph","DBP"))
-kmeans.6=lapply(table.subset,function(k) kmeans(table[,k],6,20))   
-
-#table.subset.unlist <- unlist(table.subset, recursive = FALSE)
-
-# Install purrr if not already installed
-# install.packages("purrr")
-
-library(purrr)
-
-# Example: Suppose we have a list of fitted models
-set.seed(123)
-data_list <- list(
-  df1 = data.frame(x = rnorm(20), y = rnorm(20)),
-  df2 = data.frame(x = rnorm(20), y = rnorm(20)),
-  df3 = data.frame(x = rnorm(20), y = rnorm(20))
-)
-
-# Fit a linear model to each dataset
-model_list <- map(data_list, ~ lm(y ~ x, data = .x))
-
-# Example: Select models with R-squared > 0.1
-# 1. Extract R-squared from each model summary
-rsq_values <- map_dbl(model_list, ~ summary(.x)$r.squared)
-
-#> summary(model_list[[1]])$r.squared
-#[1] 0.008413069
-> summary(kmeans.6[[1]])$cluster
-Error in summary(kmeans.6[[1]])$cluster : 
-  $ operator is invalid for atomic vectors
-
-# 2. Filter models based on condition
-selected_models <- model_list[rsq_values > 0.1]
-
-# Show selected models and their R-squared
-map(selected_models, ~ list(
-  formula = formula(.x),
-  rsq = summary(.x)$r.squared
-))
 
 ###################################################################### Map()
 list1 <- list(c(1, 2), c(3, 4))
