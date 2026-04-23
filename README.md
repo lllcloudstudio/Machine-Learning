@@ -1,6 +1,6 @@
 # ML
 
-A review or evaluation of 2017 health data from Dr. Vijay Kolachalama. Data's either synthetic or not.
+A review of 2017 health data from Dr. Vijay Kolachalama. Data is either synthetic or not.
 
 50 patient blood sample 
 13 diagnostic variables, as numerics and without annotations 
@@ -23,7 +23,9 @@ the principal component loading vectors have length p=16`
 Summary per component: Standard deviation, Proportion of Variance, or Cumulative Proportion
 multiplot line or bar graph of vectors
 
-4) model evaluation: training and test set selection (10-40 ; 15-35)
+4) kmeans evaluatin at k=6, and 1 additional parameter ...
+
+5) model evaluation: training and test set selection (10-40 ; 15-35)
    LOOCV* or k-fold cross validation* 
 
 
