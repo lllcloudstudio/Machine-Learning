@@ -167,6 +167,35 @@ all_centers = lapply(list_named,function(x) x$centers)
 sapply(all_centers,mean) # practice
 
 
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+table=read.table('/home/zznailmail/data/kolachalama_data',sep=',',header=TRUE)
+attach(table)
+Category <- sample(c("Category-01", "Category-021"), 50, replace = TRUE) # random vector not attached to table
+table[["Category"]] <- Category # add category with random labels
+table=table[,4:21]
+
+## classification mode
+# default with factor response:
+model <- svm(Category ~ ., data = table)
+
+# alternatively the traditional interface:
+x <- subset(table, select = -Category)
+y <- Category
+model <- svm(x, y) 
+
+print(model)
+summary(model)
+
+# test with train data
+pred <- predict(model, x)
+# (same as:)
+pred <- fitted(model)
+
+# Check accuracy:
+table(pred, y)
+
+
 
 # Assuming 'nested_list' contains lists of data frames
 # To calculate the mean of 'col1' in every data frame:
