@@ -1,0 +1,12 @@
+
+# PS C:\Users\aflac\Downloads\MaxQuant_v2.8.0.0\MaxQuant_v2.8.0.0\bin>
+# opt 1
+Start-Process "C:\Users\aflac\Downloads\MaxQuant_v2.8.0.0\MaxQuant_v2.8.0.0\bin\MaxQuantCmd.exe" -ArgumentList "C:\Users\aflac\Downloads\mqpar.xml C:\Users\aflac\Downloads\" -WindowStyle Hidden -PassThru
+Handles  NPM(K)    PM(K)      WS(K)     CPU(s)     Id  SI ProcessName
+-------  ------    -----      -----     ------     --  -- -----------
+     24       6      484       2596       0.06   9812   1 MaxQuantCmd
+## Results not ok--
+
+# opt 2
+Start-Process "C:\Users\aflac\Downloads\MaxQuant_v2.8.0.0\MaxQuant_v2.8.0.0\bin\MaxQuantCmd.exe" -ArgumentList "C:\Users\aflac\Downloads\mqpar1.xml C:\Users\aflac\Downloads\MaxQuant.tmp\" -WindowStyle Hidden -PassThru
+mqpar1.xml ok--
