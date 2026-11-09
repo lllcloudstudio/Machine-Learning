@@ -14,10 +14,28 @@
   .result.success { background: #e6f4ea; color: #1e4620; border: 1px solid #a6d8b3; display: block; }
   .result.error { background: #fdeaea; color: #611a15; border: 1px solid #f3b4b0; display: block; }
   .result.loading { background: #eef1f5; color: #33475b; border: 1px solid #c6d0dc; display: block; }
+
+  /* CV title: left-aligned, vertically centered in its band, Lato Thin 100 */
+  .cv-hero { display: flex; align-items: center; justify-content: flex-start; min-height: 30vh; }
+  h1.cv-title { margin: 0; font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+                font-weight: 100; font-size: clamp(4.5rem, 16vw, 9rem); line-height: 1;
+                letter-spacing: 0.02em; text-transform: lowercase; }
+  h1.cv-title a { color: inherit; text-decoration: none; transition: letter-spacing .35s ease, opacity .2s ease; }
+  h1.cv-title a:hover, h1.cv-title a:focus-visible { letter-spacing: 0.07em; opacity: .6; }
+  h1.cv-title a:focus-visible { outline: 2px solid currentColor; outline-offset: .12em; }
+  @media (prefers-reduced-motion: reduce) { h1.cv-title a { transition: none; } }
 </style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@100&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="simple-datatables.css">
 </head>
 <body>
+
+<header class="cv-hero">
+  <h1 class="cv-title"><a href="RES100726ML.docx.pdf" target="_blank" rel="noopener"
+     title="Curriculum Vitae (PDF)" aria-label="erica, Curriculum Vitae (PDF, opens in a new tab)">erica</a></h1>
+</header>
 
 <!-- API base: set to your PC's LAN IP so the phone can reach Plumber. -->
 <script>
@@ -358,7 +376,7 @@ window.onload = updatePlot;
 <br>
 <hr>
 
-<h1>Yellowbrick Report</h1>
+<h1>Yellowbrick Machine Learning Report</h1>
 <form id="form-yb">
     <label for="yb_db">Select Database:</label><br>
     <select id="yb_db" required>

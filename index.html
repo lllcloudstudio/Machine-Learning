@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CSV to MySQL Upload</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
+  h1, h2, h3 { font-size: 1.25rem; margin-top: 2rem; }
+  label { font-weight: 600; }
+  input[type="text"], textarea { width: 100%; box-sizing: border-box; padding: 0.4rem; margin-top: 0.25rem; }
+  input[type="submit"], button { margin-top: 0.75rem; padding: 0.5rem 1rem; cursor: pointer; }
+  .result { margin-top: 0.75rem; padding: 0.75rem 1rem; border-radius: 4px; font-size: 0.9rem; white-space: pre-wrap; display: none; }
+  .result.success { background: #e6f4ea; color: #1e4620; border: 1px solid #a6d8b3; display: block; }
+  .result.error { background: #fdeaea; color: #611a15; border: 1px solid #f3b4b0; display: block; }
+  .result.loading { background: #eef1f5; color: #33475b; border: 1px solid #c6d0dc; display: block; }
+
+  /* CV title: left-aligned, vertically centered in its band, Lato Thin 100 */
+  .cv-hero { display: flex; align-items: center; justify-content: flex-start; min-height: 30vh; }
+  h1.cv-title { margin: 0; font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+                font-weight: 100; font-size: clamp(4.5rem, 16vw, 9rem); line-height: 1;
+                letter-spacing: 0.02em; text-transform: lowercase; }
+  h1.cv-title a { color: inherit; text-decoration: none; transition: letter-spacing .35s ease, opacity .2s ease; }
+  h1.cv-title a:hover, h1.cv-title a:focus-visible { letter-spacing: 0.07em; opacity: .6; }
+  h1.cv-title a:focus-visible { outline: 2px solid currentColor; outline-offset: .12em; }
+  @media (prefers-reduced-motion: reduce) { h1.cv-title a { transition: none; } }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@100&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="simple-datatables.css">
+</head>
+<body>
+
+<header class="cv-hero">
+  <h1 class="cv-title"><a href="RES100726ML.docx.pdf" target="_blank" rel="noopener"
+     title="Curriculum Vitae (PDF)" aria-label="erica, Curriculum Vitae (PDF, opens in a new tab)">erica</a></h1>
+</header>
+
+<!-- API base: set to your PC's LAN IP so the phone can reach Plumber. -->
+<script>
+  const API_BASE = "http://10.0.0.214:8000";  // <-- CHANGE THIS if your IP changes
+
+  // Load databases into the two upload dropdowns on page load
+  window.addEventListener("load", async function () {
+    const ids = ["db_select", "db_select2"];
+    const setAll = html => ids.forEach(id => { document.getElementById(id).innerHTML = html; });
+    try {
+      const response = await fetch(API_BASE + "/databases");
+      const data = await response.json();
+      const status = Array.isArray(data.status) ? data.status[0] : data.status;
+      const dbs = [].concat(data.databases || []).filter(Boolean);
+
+      if (status === "success" && dbs.length) {
+        setAll(dbs.map(db => `<option value="${db}">${db}</option>`).join(""));
+      } else {
+        setAll('<option value="">No databases found</option>');
+      }
+    } catch (err) {
+      console.error("Error loading databases:", err);
+      setAll('<option value="">Error loading databases</option>');
+    }
+  });
+</script>
+
+<h1>View List of Reference Tables</h1>
+<form id="form1">
+    <label for="db_select4">Select Database:</label><br>
+    <select id="db_select4" name="db_select4" required>
+      <option value="">Loading databases...</option>
+    </select><br><br>
+    <input type="submit" value="View Tables">
+</form>
+<div id="result-tables" class="result"></div>
+<div id="tables-table-wrap" style="overflow-x:auto;"><table id="tables-table"></table></div>
+
+<p><em>Click a table name to view it.</em></p>
+<div id="result-tabledata" class="result"></div>
+<button type="button" id="download_tables_btn" style="display:none;">Download CSV</button>
+<div id="tabledata-wrap" style="overflow-x:auto;"><table id="tabledata-table"></table></div>
+
+<script src="simple-datatables.js"></script>
+<script>
+(function () {
+  const sel      = document.getElementById("db_select4");
+  const resultEl = document.getElementById("result-tables");
+  const wrap     = document.getElementById("tables-table-wrap");
+  const dataEl   = document.getElementById("result-tabledata");
+  const dataWrap = document.getElementById("tabledata-wrap");
+  const dlBtn    = document.getElementById("download_tables_btn");
+  const asArray  = v => (Array.isArray(v) ? v : [v]);
+  const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                            .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  const csvCell = v => {
+    const t = String(v === null || v === undefined ? "" : v);
+    return /[",\r\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t;
+  };
+  let dt = null;
+  let dt2 = null;
+  let current = null;  // { name, headings, rows } of the table on screen
+
+  // Fill the database dropdown
+  fetch(`${API_BASE}/databases`)
+    .then(r => r.json())
+    .then(data => {
+      const dbs = (data.databases === undefined ? [] : asArray(data.databases)).filter(Boolean);
+      sel.innerHTML = dbs.length
+        ? dbs.map(d => `<option value="${d}">${d}</option>`).join("")
+        : '<option value="">No databases found</option>';
+    })
+    .catch(() => { sel.innerHTML = '<option value="">Error loading databases</option>'; });
+
+  // List the tables in a simple-datatables grid
+  document.getElementById("form1").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    if (!sel.value) return;
+
+    // clear any previously opened table
+    if (dt2) { dt2.destroy(); dt2 = null; }
+    dataWrap.innerHTML = '<table id="tabledata-table"></table>';
+    dataEl.className = "result";
+    dlBtn.style.display = "none";
+    current = null;
+
+    resultEl.className = "result loading";
+    resultEl.textContent = "Loading tables...";
+
+    try {
+      const r = await fetch(`${API_BASE}/tables-json?db_name=${encodeURIComponent(sel.value)}`);
+      const data = await r.json();
+      const tables = (data.tables === undefined ? [] : asArray(data.tables)).filter(Boolean);
+
+      if (dt) { dt.destroy(); dt = null; }
+      wrap.innerHTML = '<table id="tables-table"></table>';
+
+      dt = new simpleDatatables.DataTable("#tables-table", {
+        data: {
+          headings: ["#", "Table name"],
+          data: tables.map((t, i) => [
+            i + 1,
+            `<a href="#" class="tbl-link" data-table="${esc(t)}">${esc(t)}</a>`
+          ])
+        },
+        searchable: true,
+        sortable: true,
+        perPage: 10,
+        perPageSelect: [10, 25, 50, 100]
+      });
+
+      resultEl.className = "result success";
+      resultEl.textContent = `${sel.value}: ${tables.length} table(s)`;
+    } catch (err) {
+      renderResult(resultEl, err.message, true);
+    }
+  });
+
+  // Click a table name -> load its contents
+  wrap.addEventListener("click", async function (e) {
+    const a = e.target.closest("a.tbl-link");
+    if (!a) return;
+    e.preventDefault();
+    const table = a.dataset.table;
+
+    dataEl.className = "result loading";
+    dataEl.textContent = "Loading " + table + "...";
+    dlBtn.style.display = "none";
+    current = null;
+
+    try {
+      const r = await fetch(
+        `${API_BASE}/table-data?db_name=${encodeURIComponent(sel.value)}&table_name=${encodeURIComponent(table)}`
+      );
+      const data = await r.json();
+      const status = Array.isArray(data.status) ? data.status[0] : data.status;
+      if (status !== "success") { renderResult(dataEl, data, false); return; }
+
+      const headings = asArray(data.headings);
+      const rows = (data.rows || []).map(asArray);
+
+      if (dt2) { dt2.destroy(); dt2 = null; }
+      dataWrap.innerHTML = '<table id="tabledata-table"></table>';
+      dt2 = new simpleDatatables.DataTable("#tabledata-table", {
+        data: { headings: headings, data: rows },
+        searchable: true,
+        sortable: true,
+        perPage: 10,
+        perPageSelect: [10, 25, 50, 100]
+      });
+
+      current = { name: sel.value + "_" + table, headings: headings, rows: rows };
+      dlBtn.style.display = "inline-block";
+      dataEl.className = "result success";
+      dataEl.textContent = `${table}: ${rows.length} row(s), ${headings.length} column(s)`;
+    } catch (err) {
+      renderResult(dataEl, err.message, true);
+    }
+  });
+
+  // Download the full loaded table as CSV
+  dlBtn.addEventListener("click", function () {
+    if (!current) return;
+    const lines = [current.headings, ...current.rows].map(r => r.map(csvCell).join(","));
+    const blob = new Blob(["\ufeff" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = current.name + ".csv";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(a.href);
+  });
+})();
+</script>
+
+<br>
+    <h1>CSV text area Upload to MySQL</h1>
+    <form id="form-upload">
+        <label for="db_select">Select Database:</label><br>
+        <select id="db_select" name="db_select" required>
+          <option value="">Loading databases...</option>
+        </select><br><br>
+
+        <label for="table_id">Desired MySQL Table Name:</label><br>
+        <input type="text" id="table_id" name="table_id" required placeholder="e.g., customer_logs"><br><br>
+
+        <label for="csv_data">Paste Comma-Delimited Data (Include Headers):</label><br>
+        <textarea id="csv_data" name="csv_data" rows="10" cols="50" required placeholder="name,age,city&#10;Alice,30,New York&#10;Bob,25,London"></textarea>
+        <br><br>
+
+        <input type="submit" value="Create Table in MySQL">
+    </form>
+    <div id="result-upload" class="result"></div>
+
+    <hr>
+
+    <h1>File Upload (CSV) to MySQL</h1>
+    <form id="form-upload2">
+        <label for="db_select2">Select Database:</label><br>
+        <select id="db_select2" name="db_select2" required>
+          <option value="">Loading databases...</option>
+        </select><br><br>
+
+        <label for="table_id2">Desired MySQL Table Name:</label><br>
+        <input type="text" id="table_id2" name="table_id2" required placeholder="e.g., customer_logs"><br><br>
+
+        <label for="csv_data2">Upload CSV File:</label><br>
+        <input type="file" id="csv_data2" name="csv_data2" accept=".csv" required>
+        <br><br>
+        <input type="submit" value="File Upload">
+    </form>
+    <div id="result-upload2" class="result"></div>
+
+    <hr>
+
+<script>
+  // Renders a plumber JSON response (or a network-level error) into the given div
+  function renderResult(div, payload, isNetworkError) {
+    div.className = "result"; // reset
+
+    if (isNetworkError) {
+      div.classList.add("error");
+      div.textContent = "Request failed: " + payload;
+      return;
+    }
+
+    // plumber wraps scalar list fields in arrays, e.g. {"status":["success"], "message":["..."]}
+    const status = Array.isArray(payload.status) ? payload.status[0] : payload.status;
+    const message = Array.isArray(payload.message) ? payload.message[0] : payload.message;
+
+    div.classList.add(status === "success" ? "success" : "error");
+    div.textContent = message || JSON.stringify(payload);
+  }
+
+  async function submitForm(endpoint, formData, resultDiv) {
+    resultDiv.className = "result loading";
+    resultDiv.textContent = "Uploading...";
+
+    try {
+      const response = await fetch(API_BASE + endpoint, {
+        method: "POST",
+        body: formData
+      });
+      const payload = await response.json();
+      renderResult(resultDiv, payload, false);
+    } catch (err) {
+      renderResult(resultDiv, err.message, true);
+    }
+  }
+
+  document.getElementById("form-upload").addEventListener("submit", function (e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    submitForm("/upload", formData, document.getElementById("result-upload"));
+  });
+
+  document.getElementById("form-upload2").addEventListener("submit", function (e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    submitForm("/upload2", formData, document.getElementById("result-upload2"));
+  });
+</script>
+
+<h1>R Plumber API Plot Loader</h1>
+<form id="plotForm" onsubmit="updatePlot(event)">
+    <label for="dataInput">Data Values (comma-separated):</label>
+    <input type="text" id="dataInput" value="10,25,8,44,30" required>
+    <br>
+
+    <label for="titleInput">Plot Title:</label>
+    <input type="text" id="titleInput" value="Live API Data" required>
+    <br>
+
+    <label for="plotType">Plot Type:</label>
+    <input type="text" id="plotType" value="scatter" required>
+    <br>
+    <button type="submit">Generate Plot</button>
+</form>
+
+<br>
+
+<div id="plotContainer">
+    <h3>R Generated Output:</h3>
+    <img id="dynamicPlot" src="" alt="Plot will appear here..." style="max-width:100%; height:auto;"/>
+</div>
+
+<script>
+function updatePlot(event) {
+    if (event) event.preventDefault();
+
+    const rawValues = document.getElementById("dataInput").value;
+    const rawTitle = document.getElementById("titleInput").value;
+    const rawPlotType = document.getElementById("plotType").value;
+
+    const encodedValues = encodeURIComponent(rawValues);
+    const encodedTitle = encodeURIComponent(rawTitle);
+    const encodedPlotType = encodeURIComponent(rawPlotType);
+
+    const finalUrl = `${API_BASE}/vector-plot?values=${encodedValues}&title=${encodedTitle}&plot=${encodedPlotType}`;
+
+    document.getElementById("dynamicPlot").src = finalUrl;
+}
+
+window.onload = updatePlot;
+</script>
+
+<h2>Run SQL Query and Download CSV</h2>
+
+<input type="text" id="sqlQuery" placeholder="Enter SQL query, e.g. USE reference; SELECT * FROM my_table" style="width:400px; max-width:100%;">
+<button id="downloadBtn">Download CSV</button>
+<button id="viewTable">View Table</button>
+
+<div id="tableOutput"></div>
+
+<script>
+    document.getElementById("downloadBtn").addEventListener("click", function() {
+        const query = document.getElementById("sqlQuery").value.trim();
+        const encodedQuery = encodeURIComponent(query);
+        window.location.href = `${API_BASE}/download?query=${encodedQuery}`;
+    });
+
+    document.getElementById("viewTable").addEventListener("click", function() {
+        const tableQuery = document.getElementById("sqlQuery").value.trim();
+        const encodedTableQuery = encodeURIComponent(tableQuery);
+
+        fetch(`${API_BASE}/downloadtablequery?tableQuery=${encodedTableQuery}`)
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById("tableOutput").innerHTML = html;
+            })
+            .catch(error => {
+                console.error("Error fetching table:", error);
+                document.getElementById("tableOutput").innerText = "Error loading table.";
+            });
+    });
+</script>
+<br>
+<hr>
+
+<h1>Yellowbrick Report</h1>
+<form id="form-yb">
+    <label for="yb_db">Select Database:</label><br>
+    <select id="yb_db" required>
+      <option value="">Loading databases...</option>
+    </select><br><br>
+
+    <label for="yb_table">Select Table:</label><br>
+    <select id="yb_table" required>
+      <option value="">Select a database first</option>
+    </select><br><br>
+
+    <input type="submit" value="Show Report">
+</form>
+<div id="result-yb" class="result"></div>
+<p id="yb-links" style="display:none;font-size:0.9rem;">
+    <a id="yb-pdf-link" href="#" target="_blank">Open PDF in new tab</a> |
+    <a id="yb-html-link" href="#" target="_blank">Open as images (phone-friendly)</a>
+</p>
+<iframe id="yb-frame" title="Yellowbrick report" style="display:none;width:100%;height:80vh;border:1px solid #c6d0dc;"></iframe>
+
+<script>
+(function () {
+  // Python report service runs on the same PC, port 8001 (see yb_report_server.py)
+  const YB_BASE = API_BASE.replace(/:\d+$/, ":8001");
+  const dbSel = document.getElementById("yb_db");
+  const tblSel = document.getElementById("yb_table");
+  const msg = document.getElementById("result-yb");
+  const frame = document.getElementById("yb-frame");
+  const links = document.getElementById("yb-links");
+  const asArray = v => (Array.isArray(v) ? v : [v]);
+  const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                            .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  const fill = (sel, list, first, empty) => {
+    sel.innerHTML = list.length
+      ? `<option value="">${first}</option>` + list.map(x => `<option value="${esc(x)}">${esc(x)}</option>`).join("")
+      : `<option value="">${empty}</option>`;
+  };
+
+  fetch(`${API_BASE}/databases`)
+    .then(r => r.json())
+    .then(d => fill(dbSel, (d.databases === undefined ? [] : asArray(d.databases)).filter(Boolean),
+                    "-- select database --", "No databases found"))
+    .catch(() => { dbSel.innerHTML = '<option value="">Error loading databases</option>'; });
+
+  dbSel.addEventListener("change", function () {
+    frame.style.display = "none"; links.style.display = "none"; msg.className = "result";
+    if (!dbSel.value) { fill(tblSel, [], "", "Select a database first"); return; }
+    tblSel.innerHTML = '<option value="">Loading tables...</option>';
+    fetch(`${API_BASE}/tables-json?db_name=${encodeURIComponent(dbSel.value)}`)
+      .then(r => r.json())
+      .then(d => fill(tblSel, (d.tables === undefined ? [] : asArray(d.tables)).filter(Boolean),
+                      "-- select table --", "No tables found"))
+      .catch(() => { tblSel.innerHTML = '<option value="">Error loading tables</option>'; });
+  });
+
+  document.getElementById("form-yb").addEventListener("submit", function (e) {
+    e.preventDefault();
+    if (!dbSel.value || !tblSel.value) return;
+    const qs = `db=${encodeURIComponent(dbSel.value)}&table=${encodeURIComponent(tblSel.value)}`;
+    document.getElementById("yb-pdf-link").href = `${YB_BASE}/report?${qs}`;
+    document.getElementById("yb-html-link").href = `${YB_BASE}/report?${qs}&format=html`;
+    msg.className = "result loading";
+    msg.textContent = "Building report...";
+    frame.onload = () => { msg.className = "result"; };
+    frame.src = `${YB_BASE}/report?${qs}`;
+    frame.style.display = "block";
+    links.style.display = "block";
+  });
+})();
+</script>
+
+
+</body>
+</html>

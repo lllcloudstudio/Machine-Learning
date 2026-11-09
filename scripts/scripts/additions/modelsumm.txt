@@ -1,0 +1,21 @@
+SVC: 0.270
+NuSVC: 0.255
+LinearSVC: 0.383
+SGDClassifier: 0.478
+KNeighborsClassifier: 0.227
+LogisticRegression: 0.356
+LogisticRegressionCV: 0.080
+BaggingClassifier: 0.273
+ExtraTreesClassifier: 0.316
+RandomForestClassifier: 0.267
+
+SVC: 0.154
+NuSVC: 0.182
+LinearSVC: 0.429
+SGDClassifier: 0.341
+KNeighborsClassifier: 0.359
+LogisticRegression: 0.333
+LogisticRegressionCV: 0.229
+BaggingClassifier: 0.303
+ExtraTreesClassifier: 0.343
+RandomForestClassifier: 0.485
